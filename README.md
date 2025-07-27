@@ -67,4 +67,36 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 ### `npm run build` fails to minify
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+# google-clone-notebook-frontend
+
+Developing a google clone notepad using React.js
+
+> > > > > > > 3dc310c05d8f79153b851724ceadc65b2619526d
+
+# NotebookLM Clone Frontend
+
+A React-based frontend for the NotebookLM clone - an AI-powered document chat application.
+
+## Features
+
+- PDF upload and viewing
+- Real-time chat with documents
+- AI-powered responses
+- Responsive design with TailwindCSS
+
+## Tech Stack
+
+- React.js
+- TailwindCSS
+- React Router
+- React PDF
+- Axios
+
+## Setup
+
+```bash
+npm install
+npm start
+```
