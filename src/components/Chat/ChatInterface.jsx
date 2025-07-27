@@ -1,77 +1,139 @@
-import React, { useRef, useEffect } from "react";
-import ChatMessage from "./ChatMessage";
-import ChatInput from "./ChatInput";
-import Loading from "../UI/Loading";
+import React, { useState } from "react";
+import { Send } from "lucide-react";
 
-const ChatInterface = ({
-  messages,
-  onSendMessage,
-  isLoading,
-  isLoadingHistory,
-  onCitationClick,
-}) => {
-  const messagesEndRef = useRef(null);
+const ChatInterface = ({ pdfId, onCitationClick }) => {
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!inputMessage.trim()) return;
+
+    const newMessage = {
+      role: "user",
+      content: inputMessage,
+      timestamp: Date.now(),
+    };
+
+    setMessages((prev) => [...prev, newMessage]);
+    setInputMessage("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/api/chat/message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          pdfId: pdfId,
+          message: inputMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      const aiMessage = {
+        role: "assistant",
+        content: data.response || "No response received",
+        citations: data.citations || [],
+        timestamp: Date.now(),
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+
+      const errorMessage = {
+        role: "assistant",
+        content: "Sorry, there was an error processing your message.",
+        citations: [],
+        timestamp: Date.now(),
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  if (isLoadingHistory) {
-    return <Loading text="Loading conversation..." />;
-  }
-
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <div className="max-w-md">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Start a conversation
-              </h3>
-              <p className="text-gray-600">
-                Ask questions about your PDF document and I'll help you find the
-                information you need.
-              </p>
-            </div>
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Start a conversation
+            </h3>
+            <p className="text-gray-600">
+              Ask questions about your PDF document.
+            </p>
           </div>
         ) : (
           messages.map((message, index) => (
-            <ChatMessage
+            <div
               key={index}
-              message={message}
-              onCitationClick={onCitationClick}
-            />
+              className={`flex ${
+                message.role === "user" ? "justify-end" : "justify-start"
+              }`}
+            >
+              <div
+                className={`max-w-md px-4 py-2 rounded-lg ${
+                  message.role === "user"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-900"
+                }`}
+              >
+                <p className="text-sm">{message.content}</p>
+                {message.citations && message.citations.length > 0 && (
+                  <div className="mt-2">
+                    {message.citations.map((citation, citIndex) => (
+                      <button
+                        key={citIndex}
+                        onClick={() =>
+                          onCitationClick && onCitationClick(citation.page)
+                        }
+                        className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded mr-1"
+                      >
+                        Page {citation.page}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           ))
         )}
 
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-4 max-w-xs">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.1s" }}
-                ></div>
-                <div
-                  className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                  style={{ animationDelay: "0.2s" }}
-                ></div>
-              </div>
+            <div className="bg-gray-200 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Typing...</p>
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
-      <div className="border-t bg-white p-4">
-        <ChatInput onSendMessage={onSendMessage} disabled={isLoading} />
+      <div className="p-4 border-t">
+        <form onSubmit={handleSubmit} className="flex space-x-2">
+          <input
+            type="text"
+            value={inputMessage}
+            onChange={(e) => setInputMessage(e.target.value)}
+            placeholder="Ask a question..."
+            className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={isLoading}
+          />
+          <button
+            type="submit"
+            disabled={!inputMessage.trim() || isLoading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+          >
+            <Send className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </div>
   );

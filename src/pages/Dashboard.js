@@ -1,86 +1,75 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useChat } from "../hooks/useChat";
-import { usePDF } from "../hooks/usePDF";
-import ChatInterface from "../components/Chat/ChatInterface";
 import PDFViewer from "../components/PDF/PDFViewer";
-import Sidebar from "../components/Layout/Sidebar";
-import Loading from "../components/UI/Loading";
+import ChatInterface from "../components/Chat/ChatInterface";
+import { ArrowLeft } from "lucide-react";
 
 const Dashboard = () => {
   const { pdfId } = useParams();
   const navigate = useNavigate();
-  const [targetPage, setTargetPage] = useState(null);
   const [pdfUrl, setPdfUrl] = useState(null);
-
-  const { pdfs, deletePDF, loadPDFs } = usePDF();
-  const {
-    messages,
-    isLoading: isChatLoading,
-    isLoadingHistory,
-    sendMessage,
-    loadConversation,
-  } = useChat(pdfId);
-
-  useEffect(() => {
-    loadPDFs();
-  }, [loadPDFs]);
+  const [targetPage, setTargetPage] = useState(null);
 
   useEffect(() => {
     if (pdfId) {
-      loadConversation();
-      setPdfUrl(
-        `${
-          process.env.REACT_APP_API_URL || "http://localhost:5000/api"
-        }/pdf/${pdfId}`
-      );
+      const url = `http://localhost:5000/api/pdf/${pdfId}`;
+      console.log("Setting PDF URL:", url);
+      setPdfUrl(url);
     }
-  }, [pdfId, loadConversation]);
+  }, [pdfId]);
 
   const handleCitationClick = (page) => {
+    console.log("Citation clicked for page:", page);
     setTargetPage(page);
-  };
-
-  const handlePdfSelect = (selectedPdfId) => {
-    navigate(`/dashboard/${selectedPdfId}`);
   };
 
   const handleBack = () => {
     navigate("/");
   };
 
-  const handleDeletePdf = async (pdfIdToDelete) => {
-    await deletePDF(pdfIdToDelete);
-    if (pdfIdToDelete === pdfId) {
-      navigate("/");
-    }
-  };
-
   if (!pdfId) {
-    return <Loading text="Loading..." />;
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900">
+            No PDF Selected
+          </h2>
+          <button
+            onClick={handleBack}
+            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="h-screen flex bg-gray-50">
-      <Sidebar
-        pdfs={pdfs}
-        currentPdfId={pdfId}
-        onPdfSelect={handlePdfSelect}
-        onDeletePdf={handleDeletePdf}
-        onBack={handleBack}
-      />
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b px-4 py-3">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={handleBack}
+            className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Upload</span>
+          </button>
+          <div className="h-6 border-l border-gray-300"></div>
+          <h1 className="text-lg font-semibold text-gray-900">Document Chat</h1>
+        </div>
+      </div>
 
-      <div className="flex-1 flex">
-        <div className="w-1/2 border-r border-gray-200">
-          <ChatInterface
-            messages={messages}
-            onSendMessage={sendMessage}
-            isLoading={isChatLoading}
-            isLoadingHistory={isLoadingHistory}
-            onCitationClick={handleCitationClick}
-          />
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Chat Panel */}
+        <div className="w-1/2 bg-white border-r">
+          <ChatInterface pdfId={pdfId} onCitationClick={handleCitationClick} />
         </div>
 
+        {/* PDF Viewer Panel */}
         <div className="w-1/2">
           {pdfUrl && (
             <PDFViewer
