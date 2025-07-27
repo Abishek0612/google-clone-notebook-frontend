@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { chatAPI } from "../services/api";
 import toast from "react-hot-toast";
 import { MESSAGES } from "../utils/constants";
@@ -22,6 +22,12 @@ export const useChat = (pdfId) => {
       setIsLoadingHistory(false);
     }
   }, [pdfId]);
+
+  useEffect(() => {
+    if (pdfId) {
+      loadConversation();
+    }
+  }, [pdfId, loadConversation]);
 
   const sendMessage = useCallback(
     async (message) => {

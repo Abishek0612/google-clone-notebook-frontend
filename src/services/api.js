@@ -6,21 +6,42 @@ const API_BASE_URL =
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },
   (error) => {
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
 
+// Response interceptor
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   (error) => {
     console.error("API Error:", error.response?.data || error.message);
+
+    if (error.code === "ERR_NETWORK") {
+      console.error(
+        "Network Error: Check if backend server is running on port 5000"
+      );
+    }
+
+    if (error.response?.status === 404) {
+      console.error("API Endpoint not found:", error.config?.url);
+    }
+
     return Promise.reject(error);
   }
 );

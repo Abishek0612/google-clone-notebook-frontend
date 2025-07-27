@@ -29,7 +29,10 @@ const Sidebar = ({
           <div className="p-4">
             <div className="animate-pulse space-y-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="bg-gray-200 h-16 rounded"></div>
+                <div
+                  key={`skeleton-${i}`}
+                  className="bg-gray-200 h-16 rounded"
+                ></div>
               ))}
             </div>
           </div>
