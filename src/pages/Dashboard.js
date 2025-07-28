@@ -13,7 +13,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (pdfId) {
-      const url = `https://google-notebook-clone-server.onrender.com/api/${pdfId}`;
+      const url = `https://google-notebook-clone-server.onrender.com/api/pdf/${pdfId}`;
       setPdfUrl(url);
     }
   }, [pdfId]);
