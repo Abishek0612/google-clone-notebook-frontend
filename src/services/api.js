@@ -5,13 +5,12 @@ const API_BASE_URL =
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000,
+  timeout: 60000,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Request interceptor
 api.interceptors.request.use(
   (config) => {
     console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
@@ -23,7 +22,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
@@ -66,6 +64,10 @@ export const pdfAPI = {
       responseType: "blob",
     }),
 
+  getEmbeddingStatus: (id) => api.get(`/pdf/${id}/embedding-status`),
+
+  reprocessEmbeddings: (id) => api.post(`/pdf/${id}/reprocess-embeddings`),
+
   delete: (id) => api.delete(`/pdf/${id}`),
 };
 
@@ -74,6 +76,9 @@ export const chatAPI = {
     api.post("/chat/message", { pdfId, message }),
 
   getConversation: (pdfId) => api.get(`/chat/conversation/${pdfId}`),
+
+  searchSimilar: (pdfId, query, limit = 5) =>
+    api.post("/chat/search-similar", { pdfId, query, limit }),
 };
 
 export default api;

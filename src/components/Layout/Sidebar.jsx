@@ -1,7 +1,56 @@
 import React from "react";
-import { ArrowLeft, FileText, Trash2, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Trash2,
+  RefreshCw,
+  Zap,
+  AlertCircle,
+} from "lucide-react";
 import { formatFileSize, formatDate } from "../../utils/helpers";
 import Button from "../UI/Button";
+
+const EmbeddingStatus = React.memo(({ status, progress }) => {
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case "completed":
+        return {
+          color: "text-green-600 bg-green-50 border-green-200",
+          text: "Vector Ready",
+          icon: "✓",
+        };
+      case "processing":
+        return {
+          color: "text-blue-600 bg-blue-50 border-blue-200",
+          text: `Processing ${progress}%`,
+          icon: "⟳",
+        };
+      case "failed":
+        return {
+          color: "text-red-600 bg-red-50 border-red-200",
+          text: "Processing Failed",
+          icon: "✗",
+        };
+      default:
+        return {
+          color: "text-gray-600 bg-gray-50 border-gray-200",
+          text: "Pending",
+          icon: "○",
+        };
+    }
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${config.color}`}
+    >
+      <span className="mr-1">{config.icon}</span>
+      {config.text}
+    </span>
+  );
+});
 
 const SkeletonItem = React.memo(() => (
   <div className="animate-pulse p-3 rounded-lg border border-gray-200">
@@ -24,24 +73,50 @@ const SkeletonItem = React.memo(() => (
 
 const PDFItem = React.memo(({ pdf, isSelected, onSelect, onDelete }) => (
   <div
-    className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
-      isSelected ? "border-primary-500 bg-primary-50" : "border-gray-200"
+    className={`p-3 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-md ${
+      isSelected
+        ? "border-blue-500 bg-blue-50 shadow-sm"
+        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
     }`}
     onClick={() => onSelect(pdf._id)}
   >
     <div className="flex items-start justify-between">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center space-x-2">
-          <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
-          <h3 className="text-sm font-medium text-gray-900 truncate">
+      <div className="flex-1 min-w-0 pr-2">
+        <div className="flex items-center space-x-2 mb-2">
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+              isSelected ? "bg-blue-100" : "bg-gray-100"
+            }`}
+          >
+            <FileText
+              className={`w-4 h-4 ${
+                isSelected ? "text-blue-600" : "text-gray-500"
+              }`}
+            />
+          </div>
+          <h3
+            className={`text-sm font-semibold truncate ${
+              isSelected ? "text-blue-900" : "text-gray-900"
+            }`}
+          >
             {pdf.originalName}
           </h3>
         </div>
 
-        <div className="mt-1 text-xs text-gray-500 space-y-1">
-          <div>{pdf.pageCount} pages</div>
-          <div>{formatFileSize(pdf.size)}</div>
-          <div>{formatDate(pdf.uploadedAt)}</div>
+        <div className="ml-10 space-y-2">
+          <div className="flex items-center justify-between text-xs text-gray-600">
+            <span>{pdf.pageCount} pages</span>
+            <span>{formatFileSize(pdf.size)}</span>
+          </div>
+
+          <EmbeddingStatus
+            status={pdf.embeddingStatus}
+            progress={pdf.embeddingProgress}
+          />
+
+          <div className="text-xs text-gray-500">
+            {formatDate(pdf.uploadedAt)}
+          </div>
         </div>
       </div>
 
@@ -50,7 +125,7 @@ const PDFItem = React.memo(({ pdf, isSelected, onSelect, onDelete }) => (
           e.stopPropagation();
           onDelete(pdf._id);
         }}
-        className="text-gray-400 hover:text-red-500 transition-colors p-1"
+        className="flex-shrink-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all duration-200"
       >
         <Trash2 className="w-4 h-4" />
       </button>
@@ -59,42 +134,70 @@ const PDFItem = React.memo(({ pdf, isSelected, onSelect, onDelete }) => (
 ));
 
 const Sidebar = React.memo(
-  ({ pdfs, currentPdfId, onPdfSelect, onDeletePdf, onBack, isLoading }) => {
+  ({
+    pdfs,
+    currentPdfId,
+    onPdfSelect,
+    onDeletePdf,
+    onBack,
+    isLoading,
+    isMobile = false,
+  }) => {
     const currentPdf = React.useMemo(
       () => pdfs.find((pdf) => pdf._id === currentPdfId),
       [pdfs, currentPdfId]
     );
 
     return (
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
-        <div className="p-4 border-b border-gray-200">
-          <Button variant="outline" size="sm" onClick={onBack} className="mb-4">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Upload
-          </Button>
+      <div className="h-full bg-white flex flex-col">
+        {!isMobile && (
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="mb-4 w-full justify-center"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Upload
+            </Button>
 
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
-            {pdfs.length > 0 && (
-              <button
-                onClick={() => window.location.reload()}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-            )}
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Documents</h2>
+              {pdfs.length > 0 && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-all duration-200"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex-1 overflow-y-auto">
           {isLoading ? (
-            <div className="p-4 space-y-4">
+            <div className="p-4 space-y-3">
               {Array.from({ length: 3 }, (_, i) => (
                 <SkeletonItem key={i} />
               ))}
             </div>
+          ) : pdfs.length === 0 ? (
+            <div className="p-6 text-center">
+              <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-6 h-6 text-gray-400" />
+              </div>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">
+                No documents yet
+              </h3>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Upload your first PDF to get started with AI-powered document
+                analysis.
+              </p>
+            </div>
           ) : (
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-3">
               {pdfs.map((pdf) => (
                 <PDFItem
                   key={pdf._id}
@@ -109,14 +212,45 @@ const Sidebar = React.memo(
         </div>
 
         {currentPdf && (
-          <div className="p-4 border-t border-gray-200 bg-gray-50">
-            <h3 className="text-sm font-medium text-gray-900 mb-2">
-              Current Document
-            </h3>
-            <div className="text-xs text-gray-600">
-              <div className="truncate">{currentPdf.originalName}</div>
-              <div className="mt-1">{currentPdf.pageCount} pages</div>
+          <div className="p-4 border-t border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                <FileText className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-semibold text-blue-900 mb-1">
+                  Current Document
+                </h3>
+                <div className="text-xs text-blue-700">
+                  <div className="truncate font-medium">
+                    {currentPdf.originalName}
+                  </div>
+                  <div className="mt-1 opacity-75">
+                    {currentPdf.pageCount} pages
+                  </div>
+                  <div className="mt-1">
+                    <EmbeddingStatus
+                      status={currentPdf.embeddingStatus}
+                      progress={currentPdf.embeddingProgress}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
+        )}
+
+        {isMobile && (
+          <div className="p-4 border-t border-gray-200 flex-shrink-0">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onBack}
+              className="w-full justify-center"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Close
+            </Button>
           </div>
         )}
       </div>
