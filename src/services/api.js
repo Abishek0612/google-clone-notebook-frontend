@@ -86,7 +86,7 @@ export const pdfAPI = {
     });
   },
 
-  getAll: () => api.get("/pdf"),
+  getAll: () => api.get("/pdfs"), // FIXED: Changed from "/pdf" to "/pdfs" ✅
 
   getById: (id) => {
     validateId(id, "PDF ID");
@@ -133,7 +133,7 @@ export const chatAPI = {
   deleteMessage: (pdfId, messageId) => {
     validateId(pdfId, "PDF ID");
     validateId(messageId, "Message ID");
-    return api.delete(`/chat/conversation/${pdfId}/message/${messageId}`);
+    return api.delete(`/chat/conversation/${pdfId}/${messageId}`); // FIXED: Removed "message/" ✅
   },
 
   clearConversation: (pdfId) => {
@@ -146,7 +146,7 @@ export const chatAPI = {
     if (!query || !query.trim()) {
       return Promise.reject(new Error("Query cannot be empty"));
     }
-    return api.post("/chat/search-similar", { pdfId, query, limit });
+    return api.post("/search-similar", { pdfId, query, limit }); // FIXED: Removed "chat/" ✅
   },
 };
 
