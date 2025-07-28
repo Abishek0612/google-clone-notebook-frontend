@@ -11,7 +11,7 @@ export const useChat = (pdfId) => {
   const [embeddingProgress, setEmbeddingProgress] = useState(0);
 
   const loadConversation = useCallback(async () => {
-    if (!pdfId) return;
+    if (!pdfId || pdfId === "undefined") return;
 
     setIsLoadingHistory(true);
     try {
@@ -25,20 +25,22 @@ export const useChat = (pdfId) => {
       setEmbeddingProgress(statusResponse.data.progress || 0);
     } catch (error) {
       console.error("Failed to load conversation:", error);
-      toast.error("Failed to load conversation history");
+      if (error.response?.status !== 404) {
+        toast.error("Failed to load conversation history");
+      }
     } finally {
       setIsLoadingHistory(false);
     }
   }, [pdfId]);
 
   useEffect(() => {
-    if (pdfId) {
+    if (pdfId && pdfId !== "undefined") {
       loadConversation();
     }
   }, [pdfId, loadConversation]);
 
   useEffect(() => {
-    if (embeddingStatus === "processing") {
+    if (embeddingStatus === "processing" && pdfId && pdfId !== "undefined") {
       const interval = setInterval(async () => {
         try {
           const response = await pdfAPI.getEmbeddingStatus(pdfId);
@@ -52,9 +54,10 @@ export const useChat = (pdfId) => {
             clearInterval(interval);
           }
         } catch (error) {
+          console.error("Failed to update embedding status:", error);
           clearInterval(interval);
         }
-      }, 2000);
+      }, 3000);
 
       return () => clearInterval(interval);
     }
@@ -62,35 +65,54 @@ export const useChat = (pdfId) => {
 
   const sendMessage = useCallback(
     async (message) => {
-      if (!pdfId || !message.trim()) return;
+      if (!pdfId || pdfId === "undefined" || !message.trim()) return;
 
-      const userMessage = {
+      const tempUserMessage = {
         role: "user",
         content: message,
         timestamp: new Date().toISOString(),
+        _id: `temp-user-${Date.now()}`,
+        isTemporary: true,
       };
 
-      setMessages((prev) => [...prev, userMessage]);
+      setMessages((prev) => [...prev, tempUserMessage]);
       setIsLoading(true);
 
       try {
         const response = await chatAPI.sendMessage(pdfId, message);
 
-        const assistantMessage = {
-          role: "assistant",
-          content: response.data.response,
-          citations: response.data.citations || [],
-          relevanceScore: response.data.relevanceScore,
-          sourceChunks: response.data.sourceChunks || [],
-          searchMethod: response.data.searchMethod,
-          timestamp: new Date().toISOString(),
-        };
+        setMessages((prev) => {
+          const withoutTemp = prev.filter(
+            (msg) => msg._id !== tempUserMessage._id
+          );
 
-        setMessages((prev) => [...prev, assistantMessage]);
+          const realUserMessage = {
+            ...response.data.userMessage,
+            timestamp:
+              response.data.userMessage.timestamp || new Date().toISOString(),
+          };
+
+          const realAssistantMessage = {
+            ...response.data.assistantMessage,
+            timestamp:
+              response.data.assistantMessage.timestamp ||
+              new Date().toISOString(),
+          };
+
+          return [...withoutTemp, realUserMessage, realAssistantMessage];
+        });
       } catch (error) {
         console.error("Failed to send message:", error);
-        toast.error(MESSAGES.CHAT_ERROR);
-        setMessages((prev) => prev.slice(0, -1));
+
+        setMessages((prev) =>
+          prev.filter((msg) => msg._id !== tempUserMessage._id)
+        );
+
+        if (error.response?.data?.details) {
+          toast.error(error.response.data.details);
+        } else {
+          toast.error(MESSAGES.CHAT_ERROR);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -98,9 +120,53 @@ export const useChat = (pdfId) => {
     [pdfId]
   );
 
+  const deleteMessage = useCallback(
+    async (messageId) => {
+      if (!pdfId || pdfId === "undefined" || !messageId) return;
+
+      if (messageId.startsWith("temp-")) {
+        toast.error(
+          "Cannot delete unsaved message. Please wait for the message to be saved."
+        );
+        return;
+      }
+
+      try {
+        await chatAPI.deleteMessage(pdfId, messageId);
+        setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+        toast.success("Message deleted successfully");
+      } catch (error) {
+        console.error("Failed to delete message:", error);
+
+        if (error.response?.status === 404) {
+          toast.error("Message not found or already deleted");
+          setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+        } else if (error.response?.data?.details) {
+          toast.error(error.response.data.details);
+        } else {
+          toast.error("Failed to delete message");
+        }
+      }
+    },
+    [pdfId]
+  );
+
+  const clearConversation = useCallback(async () => {
+    if (!pdfId || pdfId === "undefined") return;
+
+    try {
+      await chatAPI.clearConversation(pdfId);
+      setMessages([]);
+      toast.success("Conversation cleared successfully");
+    } catch (error) {
+      console.error("Failed to clear conversation:", error);
+      toast.error("Failed to clear conversation");
+    }
+  }, [pdfId]);
+
   const searchSimilar = useCallback(
     async (query) => {
-      if (!pdfId || !query.trim()) return [];
+      if (!pdfId || pdfId === "undefined" || !query.trim()) return [];
 
       try {
         const response = await chatAPI.searchSimilar(pdfId, query);
@@ -114,7 +180,7 @@ export const useChat = (pdfId) => {
   );
 
   const reprocessEmbeddings = useCallback(async () => {
-    if (!pdfId) return;
+    if (!pdfId || pdfId === "undefined") return;
 
     try {
       await pdfAPI.reprocessEmbeddings(pdfId);
@@ -134,6 +200,8 @@ export const useChat = (pdfId) => {
     embeddingStatus,
     embeddingProgress,
     sendMessage,
+    deleteMessage,
+    clearConversation,
     loadConversation,
     searchSimilar,
     reprocessEmbeddings,

@@ -1,102 +1,67 @@
-# Getting Started with Create React App
+### **Frontend README.md**
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# NotebookLM Clone - Frontend
 
-## Available Scripts
+A modern, responsive React.js application that provides an intuitive interface for AI-powered document analysis and chat functionality. Built with cutting-edge technologies and advanced user experience patterns.
 
-In the project directory, you can run:
+## Advanced Features
 
-### `npm start`
+### User Interface & Experience
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Responsive Design**: Mobile-first approach with seamless tablet and desktop experiences
+- **Advanced Chat Interface**: Real-time messaging with typing indicators and message status
+- **Smart PDF Viewer**: Integrated PDF display with citation navigation and page jumping
+- **Drag & Drop Upload**: Intuitive file upload with progress tracking and validation
+- **Real-time Status**: Live embedding progress tracking with visual indicators
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+### State Management & Performance
 
-### `npm test`
+- **Custom Hooks**: Advanced React hooks for chat, PDF management, and API interactions
+- **Intelligent Caching**: Client-side caching with automatic invalidation strategies
+- **Error Boundaries**: Comprehensive error handling with graceful fallbacks
+- **Performance Optimization**: Code splitting, lazy loading, and memoization
+- **Responsive Loading**: Skeleton screens and progressive loading states
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Advanced React Patterns
 
-### `npm run build`
+- **Compound Components**: Modular UI components with flexible composition
+- **Context API**: Global state management for user preferences and theme
+- **Custom Hooks**: Reusable logic for API interactions and state management
+- **Error Boundaries**: Graceful error handling with user-friendly fallbacks
+- **Memoization**: Optimized re-rendering with React.memo and useMemo
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## 🛠 Technology Stack
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Framework**: React 18 with modern hooks and concurrent features
+- **Styling**: Tailwind CSS with custom design system and animations
+- **Routing**: React Router v6 with dynamic route handling
+- **HTTP Client**: Axios with interceptors and request/response transformation
+- **File Handling**: React Dropzone for advanced file upload capabilities
+- **Notifications**: React Hot Toast with custom styling
+- **Icons**: Lucide React for consistent iconography
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Quick Start
 
-### `npm run eject`
+### Prerequisites
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+- Node.js (v16 or higher)
+- Backend server running on = https://google-notebook-clone-server.onrender.com/api
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Installation
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+1. **Clone the repository**
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+   git clone = https://github.com/Abishek0612/google-clone-notebook-frontend.git
+   cd frontend
 
-## Learn More
+### Install dependencies ( node_modules is deleted)
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-# This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
-
-# google-clone-notebook-frontend
-
-Developing a google clone notepad using React.js
-
-> > > > > > > 3dc310c05d8f79153b851724ceadc65b2619526d
-
-# NotebookLM Clone Frontend
-
-A React-based frontend for the NotebookLM clone - an AI-powered document chat application.
-
-## Features
-
-- PDF upload and viewing
-- Real-time chat with documents
-- AI-powered responses
-- Responsive design with TailwindCSS
-
-## Tech Stack
-
-- React.js
-- TailwindCSS
-- React Router
-- React PDF
-- Axios
-
-## Setup
-
-```bash
 npm install
+
+### Start the server
+
 npm start
-```
+
+(or)
+
+npm run dev

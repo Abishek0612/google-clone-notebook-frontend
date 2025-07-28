@@ -27,6 +27,7 @@ const Home = () => {
     uploadPDF,
     deletePDF,
     loadPDFs,
+    reprocessEmbeddings,
   } = usePDF();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -34,7 +35,9 @@ const Home = () => {
     async (file) => {
       try {
         const uploadedPdf = await uploadPDF(file);
-        navigate(`/dashboard/${uploadedPdf.id}`);
+        if (uploadedPdf && uploadedPdf.id) {
+          navigate(`/dashboard/${uploadedPdf.id}`);
+        }
       } catch (error) {
         console.error("Upload failed:", error);
       }
@@ -44,10 +47,30 @@ const Home = () => {
 
   const handlePdfSelect = React.useCallback(
     (pdfId) => {
+      if (!pdfId || pdfId === "undefined") {
+        console.error("Invalid PDF ID selected:", pdfId);
+        return;
+      }
       navigate(`/dashboard/${pdfId}`);
       setIsSidebarOpen(false);
     },
     [navigate]
+  );
+
+  const handleDeletePdf = React.useCallback(
+    async (pdfId) => {
+      if (window.confirm("Are you sure you want to delete this PDF?")) {
+        await deletePDF(pdfId);
+      }
+    },
+    [deletePDF]
+  );
+
+  const handleReprocessEmbeddings = React.useCallback(
+    async (pdfId) => {
+      await reprocessEmbeddings(pdfId);
+    },
+    [reprocessEmbeddings]
   );
 
   const features = useMemo(
@@ -125,7 +148,8 @@ const Home = () => {
                 <Sidebar
                   pdfs={pdfs}
                   onPdfSelect={handlePdfSelect}
-                  onDeletePdf={deletePDF}
+                  onDeletePdf={handleDeletePdf}
+                  onReprocessEmbeddings={handleReprocessEmbeddings}
                   onBack={() => setIsSidebarOpen(false)}
                   isLoading={isLoading && !initialLoading}
                   isMobile={true}
@@ -138,7 +162,8 @@ const Home = () => {
             <Sidebar
               pdfs={pdfs}
               onPdfSelect={handlePdfSelect}
-              onDeletePdf={deletePDF}
+              onDeletePdf={handleDeletePdf}
+              onReprocessEmbeddings={handleReprocessEmbeddings}
               onBack={() => {}}
               isLoading={isLoading && !initialLoading}
             />

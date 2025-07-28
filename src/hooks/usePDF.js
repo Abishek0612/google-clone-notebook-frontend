@@ -51,9 +51,10 @@ export const usePDF = () => {
 
   useEffect(() => {
     const cachedData = getCache();
-    if (cachedData) {
+    if (cachedData && Array.isArray(cachedData)) {
       setPdfs(cachedData);
       setInitialLoading(false);
+      loadPDFs(false);
     } else {
       loadPDFs();
     }
@@ -63,8 +64,9 @@ export const usePDF = () => {
     if (showLoading) setIsLoading(true);
     try {
       const response = await pdfAPI.getAll();
-      setPdfs(response.data);
-      setCache(response.data);
+      const pdfsData = response.data || [];
+      setPdfs(pdfsData);
+      setCache(pdfsData);
     } catch (error) {
       console.error("Failed to load PDFs:", error);
       toast.error("Failed to load PDFs");
@@ -75,29 +77,60 @@ export const usePDF = () => {
   }, []);
 
   const uploadPDF = useCallback(async (file) => {
+    if (!file) {
+      toast.error("No file selected");
+      return;
+    }
+
+    if (file.type !== "application/pdf") {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File size must be less than 50MB");
+      return;
+    }
+
     setIsLoading(true);
     setUploadProgress(0);
 
     try {
       const response = await pdfAPI.upload(file, (progressEvent) => {
-        const progress = Math.round(
-          (progressEvent.loaded * 100) / progressEvent.total
-        );
-        setUploadProgress(progress);
+        if (progressEvent.total) {
+          const progress = Math.round(
+            (progressEvent.loaded * 100) / progressEvent.total
+          );
+          setUploadProgress(progress);
+        }
       });
 
       const newPdf = response.data;
+      if (!newPdf || !newPdf.id) {
+        throw new Error("Invalid response from upload");
+      }
+
       setPdfs((prev) => {
         const updated = [newPdf, ...prev];
         setCache(updated);
         return updated;
       });
 
-      toast.success(MESSAGES.UPLOAD_SUCCESS);
+      toast.success("PDF uploaded successfully!");
       return newPdf;
     } catch (error) {
       console.error("Upload failed:", error);
-      toast.error(MESSAGES.UPLOAD_ERROR);
+
+      if (error.response?.data?.details) {
+        toast.error(error.response.data.details);
+      } else if (error.message.includes("Network Error")) {
+        toast.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else {
+        toast.error("Failed to upload PDF. Please try again.");
+      }
+
       throw error;
     } finally {
       setIsLoading(false);
@@ -106,6 +139,11 @@ export const usePDF = () => {
   }, []);
 
   const deletePDF = useCallback(async (id) => {
+    if (!id || id === "undefined") {
+      toast.error("Invalid PDF ID");
+      return;
+    }
+
     try {
       await pdfAPI.delete(id);
       setPdfs((prev) => {
@@ -113,10 +151,34 @@ export const usePDF = () => {
         setCache(updated);
         return updated;
       });
-      toast.success(MESSAGES.DELETE_SUCCESS);
+      toast.success("PDF deleted successfully");
     } catch (error) {
       console.error("Delete failed:", error);
-      toast.error(MESSAGES.DELETE_ERROR);
+
+      if (error.response?.status === 404) {
+        toast.error("PDF not found");
+        setPdfs((prev) => {
+          const updated = prev.filter((pdf) => pdf._id !== id);
+          setCache(updated);
+          return updated;
+        });
+      } else {
+        toast.error("Failed to delete PDF");
+      }
+    }
+  }, []);
+
+  const checkPDFStatus = useCallback(async (id) => {
+    if (!id || id === "undefined") {
+      return null;
+    }
+
+    try {
+      const response = await pdfAPI.repairCheck(id);
+      return response.data;
+    } catch (error) {
+      console.error("Status check failed:", error);
+      return null;
     }
   }, []);
 
@@ -124,6 +186,34 @@ export const usePDF = () => {
     clearCache();
     loadPDFs();
   }, [loadPDFs]);
+
+  const reprocessEmbeddings = useCallback(async (id) => {
+    if (!id || id === "undefined") {
+      toast.error("Invalid PDF ID");
+      return;
+    }
+
+    try {
+      await pdfAPI.reprocessEmbeddings(id);
+      toast.success("Reprocessing started");
+
+      setPdfs((prev) =>
+        prev.map((pdf) =>
+          pdf._id === id
+            ? { ...pdf, embeddingStatus: "processing", embeddingProgress: 0 }
+            : pdf
+        )
+      );
+    } catch (error) {
+      console.error("Reprocess failed:", error);
+
+      if (error.response?.data?.needsReupload) {
+        toast.error("File missing. Please re-upload the document.");
+      } else {
+        toast.error("Failed to start reprocessing");
+      }
+    }
+  }, []);
 
   return {
     pdfs,
@@ -134,5 +224,7 @@ export const usePDF = () => {
     deletePDF,
     loadPDFs,
     refreshPDFs,
+    checkPDFStatus,
+    reprocessEmbeddings,
   };
 };

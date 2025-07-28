@@ -1,10 +1,17 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Send, Mic, MicOff } from "lucide-react";
+import { Send, Mic, MicOff, Trash2 } from "lucide-react";
 import { useChat } from "../../hooks/useChat";
 import ChatMessage from "./ChatMessage";
 
 const ChatInterface = ({ pdfId, onCitationClick }) => {
-  const { messages, isLoading, isLoadingHistory, sendMessage } = useChat(pdfId);
+  const {
+    messages,
+    isLoading,
+    isLoadingHistory,
+    sendMessage,
+    deleteMessage,
+    clearConversation,
+  } = useChat(pdfId);
   const [inputMessage, setInputMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -70,8 +77,10 @@ const ChatInterface = ({ pdfId, onCitationClick }) => {
     e.preventDefault();
     if (!inputMessage.trim() || isLoading) return;
 
-    await sendMessage(inputMessage.trim());
+    const messageToSend = inputMessage.trim();
     setInputMessage("");
+
+    await sendMessage(messageToSend);
   };
 
   const handleVoiceToggle = () => {
@@ -93,6 +102,16 @@ const ChatInterface = ({ pdfId, onCitationClick }) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSubmit(e);
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    await deleteMessage(messageId);
+  };
+
+  const handleClearAll = async () => {
+    if (window.confirm("Are you sure you want to clear all messages?")) {
+      await clearConversation();
     }
   };
 
@@ -125,13 +144,37 @@ const ChatInterface = ({ pdfId, onCitationClick }) => {
               </p>
             </div>
           ) : (
-            messages.map((message, index) => (
-              <ChatMessage
-                key={`${message.timestamp}-${index}`}
-                message={message}
-                onCitationClick={onCitationClick}
-              />
-            ))
+            <>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Conversation (
+                  {
+                    messages.filter(
+                      (m) => !m.isTemporary && !m._id?.startsWith("temp-")
+                    ).length
+                  }{" "}
+                  messages)
+                </h3>
+                {messages.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="flex items-center space-x-1 px-3 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-all duration-200"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span className="text-sm">Clear All</span>
+                  </button>
+                )}
+              </div>
+
+              {messages.map((message, index) => (
+                <ChatMessage
+                  key={message._id || `${message.timestamp}-${index}`}
+                  message={message}
+                  onCitationClick={onCitationClick}
+                  onDelete={handleDeleteMessage}
+                />
+              ))}
+            </>
           )}
 
           {isLoading && (
