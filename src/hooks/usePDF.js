@@ -60,6 +60,70 @@ export const usePDF = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const processingPdfs = pdfs.filter(
+      (pdf) =>
+        pdf.embeddingStatus === "processing" ||
+        pdf.embeddingStatus === "pending"
+    );
+
+    if (processingPdfs.length > 0) {
+      const interval = setInterval(async () => {
+        try {
+          const updates = await Promise.all(
+            processingPdfs.map(async (pdf) => {
+              try {
+                const response = await pdfAPI.getEmbeddingStatus(pdf._id);
+                return {
+                  id: pdf._id,
+                  status: response.data.status,
+                  progress: response.data.progress || 0,
+                  error: response.data.error,
+                };
+              } catch (error) {
+                console.error(
+                  `Failed to get status for PDF ${pdf._id}:`,
+                  error
+                );
+                return null;
+              }
+            })
+          );
+
+          setPdfs((prev) => {
+            const updated = prev.map((pdf) => {
+              const update = updates.find((u) => u && u.id === pdf._id);
+              if (update) {
+                return {
+                  ...pdf,
+                  embeddingStatus: update.status,
+                  embeddingProgress: update.progress,
+                  embeddingError: update.error,
+                };
+              }
+              return pdf;
+            });
+            setCache(updated);
+            return updated;
+          });
+
+          const stillProcessing = updates.some(
+            (u) => u && (u.status === "processing" || u.status === "pending")
+          );
+
+          if (!stillProcessing) {
+            clearInterval(interval);
+          }
+        } catch (error) {
+          console.error("Failed to update embedding statuses:", error);
+          clearInterval(interval);
+        }
+      }, 3000);
+
+      return () => clearInterval(interval);
+    }
+  }, [pdfs]);
+
   const loadPDFs = useCallback(async (showLoading = true) => {
     if (showLoading) setIsLoading(true);
     try {

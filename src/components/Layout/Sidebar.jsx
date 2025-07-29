@@ -12,7 +12,7 @@ import {
 import { formatFileSize, formatDate } from "../../utils/helpers";
 import Button from "../UI/Button";
 
-const EmbeddingStatus = React.memo(({ status, progress, fileExists }) => {
+const EmbeddingStatus = React.memo(({ status, fileExists }) => {
   const getStatusConfig = (status, fileExists) => {
     if (!fileExists) {
       return {
@@ -29,12 +29,6 @@ const EmbeddingStatus = React.memo(({ status, progress, fileExists }) => {
           text: "Vector Ready",
           icon: <CheckCircle className="w-3 h-3" />,
         };
-      case "processing":
-        return {
-          color: "text-blue-600 bg-blue-50 border-blue-200",
-          text: `Processing ${progress || 0}%`,
-          icon: <RefreshCw className="w-3 h-3 animate-spin" />,
-        };
       case "failed":
         return {
           color: "text-red-600 bg-red-50 border-red-200",
@@ -42,15 +36,13 @@ const EmbeddingStatus = React.memo(({ status, progress, fileExists }) => {
           icon: <XCircle className="w-3 h-3" />,
         };
       default:
-        return {
-          color: "text-gray-600 bg-gray-50 border-gray-200",
-          text: "Pending",
-          icon: <div className="w-3 h-3 border border-gray-400 rounded-full" />,
-        };
+        return null;
     }
   };
 
   const config = getStatusConfig(status, fileExists);
+
+  if (!config) return null;
 
   return (
     <span
@@ -154,7 +146,6 @@ const PDFItem = React.memo(
 
               <EmbeddingStatus
                 status={pdf.embeddingStatus}
-                progress={pdf.embeddingProgress}
                 fileExists={pdf.fileExists}
               />
 
@@ -296,13 +287,14 @@ const Sidebar = React.memo(
                   <div className="mt-1 opacity-75">
                     {currentPdf.pageCount} pages
                   </div>
-                  <div className="mt-1">
-                    <EmbeddingStatus
-                      status={currentPdf.embeddingStatus}
-                      progress={currentPdf.embeddingProgress}
-                      fileExists={currentPdf.fileExists}
-                    />
-                  </div>
+                  {currentPdf.embeddingStatus === "completed" && (
+                    <div className="mt-1">
+                      <EmbeddingStatus
+                        status={currentPdf.embeddingStatus}
+                        fileExists={currentPdf.fileExists}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
