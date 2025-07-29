@@ -54,7 +54,7 @@ export const usePDF = () => {
     if (cachedData && Array.isArray(cachedData)) {
       setPdfs(cachedData);
       setInitialLoading(false);
-      loadPDFs(false);
+      setTimeout(() => loadPDFs(false), 1000);
     } else {
       loadPDFs();
     }
@@ -69,7 +69,9 @@ export const usePDF = () => {
       setCache(pdfsData);
     } catch (error) {
       console.error("Failed to load PDFs:", error);
-      toast.error("Failed to load PDFs");
+      if (error.response?.status !== 429) {
+        toast.error("Failed to load PDFs");
+      }
     } finally {
       setIsLoading(false);
       setInitialLoading(false);
