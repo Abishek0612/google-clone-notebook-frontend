@@ -12,6 +12,15 @@ function PDFViewer({ pdfUrl, targetPage }) {
   const [showFallback, setShowFallback] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
+
+  useEffect(() => {
+    if (pdfUrl) {
+      setIsLoading(true);
+      setHasError(false);
+      setIframeKey((prev) => prev + 1);
+    }
+  }, [pdfUrl, targetPage]);
 
   const openInNewTab = () => {
     window.open(pdfUrl, "_blank");
@@ -21,14 +30,17 @@ function PDFViewer({ pdfUrl, targetPage }) {
     const link = document.createElement("a");
     link.href = pdfUrl;
     link.download = "document.pdf";
+    link.target = "_blank";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handleIframeLoad = () => {
-    setIsLoading(false);
-    setHasError(false);
+    setTimeout(() => {
+      setIsLoading(false);
+      setHasError(false);
+    }, 1000);
   };
 
   const handleIframeError = () => {
@@ -94,7 +106,10 @@ function PDFViewer({ pdfUrl, targetPage }) {
               </button>
 
               <button
-                onClick={() => setShowFallback(false)}
+                onClick={() => {
+                  setShowFallback(false);
+                  setIframeKey((prev) => prev + 1);
+                }}
                 className="w-full text-sm text-blue-600 hover:text-blue-800 py-3 transition-colors duration-200"
               >
                 Try inline viewer instead
@@ -159,6 +174,7 @@ function PDFViewer({ pdfUrl, targetPage }) {
         )}
 
         <iframe
+          key={iframeKey}
           src={`${pdfUrl}#page=${targetPage || 1}&view=FitH&zoom=page-width`}
           width="100%"
           height="100%"
