@@ -13,7 +13,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (pdfId) {
-      const url = `https://google-notebook-clone-server.onrender.com/api/pdf/${pdfId}`;
+      const API_BASE_URL =
+        process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+      const url = `${API_BASE_URL}/pdf/${pdfId}`;
       setPdfUrl(url);
     }
   }, [pdfId]);
