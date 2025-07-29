@@ -14,9 +14,18 @@ A modern, responsive React.js application that provides an intuitive interface f
 
 - **Responsive Design**: Mobile-first approach with seamless tablet and desktop experiences
 - **Advanced Chat Interface**: Real-time messaging with typing indicators and message status
+- **Voice-to-Text Input**: Speech recognition for hands-free document interaction
 - **Smart PDF Viewer**: Integrated PDF display with citation navigation and page jumping
 - **Drag & Drop Upload**: Intuitive file upload with progress tracking and validation
 - **Real-time Status**: Live embedding progress tracking with visual indicators
+
+### AI-Powered Interactions
+
+- **Voice Input Support**: Microphone integration for speech-to-text functionality
+- **Smart Contextual Responses**: AI answers with document citations and page references
+- **Vector Search**: Intelligent document search using embedding similarity
+- **Multi-modal Input**: Support for both text and voice queries
+- **Real-time Processing**: Live response generation with progress indicators
 
 ### State Management & Performance
 
@@ -46,6 +55,22 @@ A modern, responsive React.js application that provides an intuitive interface f
 
 ## Quick Start
 
+## Environment Configuration
+
+### Environment Files
+
+Create the following environment files in the root directory:
+
+#### `.env.development` (for local development)
+
+```env
+REACT_APP_API_URL=http://localhost:5000/api
+
+
+.env.production (for production builds)
+REACT_APP_API_URL=https://your-backend-server.onrender.com/api
+
+
 ### Prerequisites
 
 - Node.js (v16 or higher)
@@ -69,3 +94,4 @@ npm start
 (or)
 
 npm run dev
+```
