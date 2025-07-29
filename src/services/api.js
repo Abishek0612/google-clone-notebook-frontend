@@ -11,7 +11,6 @@ const api = axios.create({
   },
 });
 
-// Request interceptor
 api.interceptors.request.use(
   (config) => {
     if (config.url && config.url.includes("undefined")) {
@@ -28,7 +27,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor
 api.interceptors.response.use(
   (response) => {
     console.log(`API Response: ${response.status} ${response.config.url}`);
@@ -86,7 +84,7 @@ export const pdfAPI = {
     });
   },
 
-  getAll: () => api.get("/pdfs"), // FIXED: Changed from "/pdf" to "/pdfs" ✅
+  getAll: () => api.get("/pdfs"),
 
   getById: (id) => {
     validateId(id, "PDF ID");
@@ -122,23 +120,23 @@ export const chatAPI = {
     if (!message || !message.trim()) {
       return Promise.reject(new Error("Message cannot be empty"));
     }
-    return api.post("/chat/message", { pdfId, message });
+    return api.post("/message", { pdfId, message });
   },
 
   getConversation: (pdfId) => {
     validateId(pdfId, "PDF ID");
-    return api.get(`/chat/conversation/${pdfId}`);
+    return api.get(`/conversation/${pdfId}`);
   },
 
   deleteMessage: (pdfId, messageId) => {
     validateId(pdfId, "PDF ID");
     validateId(messageId, "Message ID");
-    return api.delete(`/chat/conversation/${pdfId}/${messageId}`); // FIXED: Removed "message/" ✅
+    return api.delete(`/conversation/${pdfId}/${messageId}`);
   },
 
   clearConversation: (pdfId) => {
     validateId(pdfId, "PDF ID");
-    return api.delete(`/chat/conversation/${pdfId}/clear`);
+    return api.delete(`/conversation/${pdfId}/clear`);
   },
 
   searchSimilar: (pdfId, query, limit = 5) => {
@@ -146,7 +144,7 @@ export const chatAPI = {
     if (!query || !query.trim()) {
       return Promise.reject(new Error("Query cannot be empty"));
     }
-    return api.post("/search-similar", { pdfId, query, limit }); // FIXED: Removed "chat/" ✅
+    return api.post("/search-similar", { pdfId, query, limit });
   },
 };
 
