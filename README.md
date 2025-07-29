@@ -1,5 +1,9 @@
 ### **Frontend README.md**
 
+## Live Demo
+
+- **Frontend**: https://google-notebook-llm.netlify.app/
+
 # NotebookLM Clone - Frontend
 
 A modern, responsive React.js application that provides an intuitive interface for AI-powered document analysis and chat functionality. Built with cutting-edge technologies and advanced user experience patterns.
